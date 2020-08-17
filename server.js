@@ -11,6 +11,20 @@ app.use(express.urlencoded({ extended: true }));
 app.use(express.json());
 app.use(express.static('public'));
 
+function filterByQuery(query, noteArray) {
+  let filteredResults = noteArray;
+  if (query.title) {
+    filteredResults = filteredResults.filter(note => note.title === query.title);
+  }
+  if (query.text) {
+    filteredResults = filteredResults.filter(note => note.text === query.text);
+  }
+  if (query.id) {
+    filteredResults = filteredResults.filter(note => note.id === query.id);
+  }
+  return filteredResults;
+}
+
 function findById(id, notesArray) {
   const result = notesArray.filter(note => note.id ===id)[0];
   return result;
@@ -66,12 +80,6 @@ app.post('/api/notes', (req, res) => {
   }
 });
 
-app.delete("/api/notes/:id", function(req, res) {
-  notes.splice(req.params.id, 1);
-  updateDb();
-  console.log("Deleted note with id "+req.params.id);
-});
-
 // get routes for html files
 app.get('/', (req, res) => {
   res.sendFile(path.join(__dirname, './public/index.html'));
@@ -79,13 +87,6 @@ app.get('/', (req, res) => {
 app.get('/notes', (req, res) => {
   res.sendFile(path.join(__dirname, './public/notes.html'));
 });
-
-function updateDb() {
-  fs.writeFile("db/notes.json",JSON.stringify(note,'\t'),err => {
-      if (err) throw err;
-      return true;
-  });
-}
 
 app.listen(PORT, () => {
     console.log(`API server now on port ${PORT}!`);
